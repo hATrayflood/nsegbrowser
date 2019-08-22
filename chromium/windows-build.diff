@@ -1,0 +1,87 @@
+diff --git a/.gitignore b/.gitignore
+index 9752fac..29a8354 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -7,6 +7,7 @@
+ *.props
+ *.pyc
+ *.pyproj
++.vpython*
+ *.rules
+ *.sdf
+ *.sln
+diff --git a/build/toolchain/win/midl.py b/build/toolchain/win/midl.py
+index ab04546..e806e34 100644
+--- a/build/toolchain/win/midl.py
++++ b/build/toolchain/win/midl.py
+@@ -155,29 +155,10 @@ def overwrite_cls_guid(h_file, iid_file, tlb_file, dynamic_guid):
+ 
+ def main(arch, gendir, outdir, dynamic_guid, tlb, h, dlldata, iid, proxy, idl,
+          *flags):
+-  # Copy checked-in outputs to final location.
+-  source = gendir
+-  if os.path.isdir(os.path.join(source, os.path.basename(idl))):
+-    source = os.path.join(source, os.path.basename(idl))
+-  source = os.path.join(source, arch.split('.')[1])  # Append 'x86' or 'x64'.
+-  source = os.path.normpath(source)
+-  distutils.dir_util.copy_tree(source, outdir, preserve_times=False)
+-  if dynamic_guid != 'none':
+-    overwrite_cls_guid(os.path.join(outdir, h),
+-                       os.path.join(outdir, iid),
+-                       os.path.join(outdir, tlb),
+-                       uuid.UUID(dynamic_guid))
+-
+   # On non-Windows, that's all we can do.
+   if sys.platform != 'win32':
+     return 0
+ 
+-  # On Windows, run midl.exe on the input and check that its outputs are
+-  # identical to the checked-in outputs (after possibly replacing their main
+-  # class guid).
+-  tmp_dir = tempfile.mkdtemp()
+-  delete_tmp_dir = True
+-
+   # Read the environment block from the file. This is stored in the format used
+   # by CreateProcess. Drop last 2 NULs, one for list terminator, one for
+   # trailing vs. separator.
+@@ -185,7 +166,7 @@ def main(arch, gendir, outdir, dynamic_guid, tlb, h, dlldata, iid, proxy, idl,
+   env_dict = dict([item.split('=', 1) for item in env_pairs])
+ 
+   args = ['midl', '/nologo'] + list(flags) + [
+-      '/out', tmp_dir,
++      '/out', outdir,
+       '/tlb', tlb,
+       '/h', h,
+       '/dlldata', dlldata,
+@@ -210,30 +191,9 @@ def main(arch, gendir, outdir, dynamic_guid, tlb, h, dlldata, iid, proxy, idl,
+     if popen.returncode != 0:
+       return popen.returncode
+ 
+-    for f in os.listdir(tmp_dir):
+-      ZapTimestamp(os.path.join(tmp_dir, f))
+-
+-    # Now compare the output in tmp_dir to the copied-over outputs.
+-    diff = filecmp.dircmp(tmp_dir, outdir)
+-    if diff.diff_files:
+-      print('midl.exe output different from files in %s, see %s' % (outdir,
+-                                                                    tmp_dir))
+-      for f in diff.diff_files:
+-        if f.endswith('.tlb'): continue
+-        fromfile = os.path.join(outdir, f)
+-        tofile = os.path.join(tmp_dir, f)
+-        print(''.join(
+-            difflib.unified_diff(
+-                open(fromfile, 'U').readlines(),
+-                open(tofile, 'U').readlines(), fromfile, tofile)))
+-      delete_tmp_dir = False
+-      print('To rebaseline:')
+-      print('  copy /y %s\* %s' % (tmp_dir, source))
+-      sys.exit(1)
+     return 0
+   finally:
+-    if os.path.exists(tmp_dir) and delete_tmp_dir:
+-      shutil.rmtree(tmp_dir)
++    pass
+ 
+ 
+ if __name__ == '__main__':

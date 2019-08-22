@@ -1,0 +1,228 @@
+diff --git a/build/win/reorder-imports.py b/build/win/reorder-imports.py
+index ee27ed19cc27..8c00d760b7e0 100755
+--- a/build/win/reorder-imports.py
++++ b/build/win/reorder-imports.py
+@@ -23,8 +23,8 @@ def reorder_imports(input_dir, output_dir, architecture):
+   # correct executable in the first place, so that this script
+   # only needs to verify that and not write a whole new exe.
+ 
+-  input_image = os.path.join(input_dir, 'chrome.exe')
+-  output_image = os.path.join(output_dir, 'chrome.exe')
++  input_image = os.path.join(input_dir, 'nsegbrowser.exe')
++  output_image = os.path.join(output_dir, 'nsegbrowser.exe')
+ 
+   # pefile mmap()s the whole executable, and then parses parts of
+   # it into python data structures for ease of processing.
+@@ -72,7 +72,7 @@ def reorder_imports(input_dir, output_dir, architecture):
+ 
+   pe.write(filename=output_image)
+ 
+-  for fname in glob.iglob(os.path.join(input_dir, 'chrome.exe.*')):
++  for fname in glob.iglob(os.path.join(input_dir, 'nsegbrowser.exe.*')):
+     shutil.copy(fname, os.path.join(output_dir, os.path.basename(fname)))
+   return 0
+ 
+diff --git a/chrome/BUILD.gn b/chrome/BUILD.gn
+index 1b355b2404bc..506d316b1e16 100644
+--- a/chrome/BUILD.gn
++++ b/chrome/BUILD.gn
+@@ -65,13 +65,13 @@ if (is_win) {
+     # See comment in chrome_dll.gypi in the hardlink_to_output
+     # target for why this cannot be 'initial' like the DLL.
+     inputs = [
+-      "$root_out_dir/initialexe/chrome.exe",
++      "$root_out_dir/initialexe/nsegbrowser.exe",
+     ]
+     outputs = [
+-      "$root_out_dir/chrome.exe",
++      "$root_out_dir/nsegbrowser.exe",
+     ]
+     if (symbol_level != 0) {
+-      outputs += [ "$root_out_dir/chrome.exe.pdb" ]
++      outputs += [ "$root_out_dir/nsegbrowser.exe.pdb" ]
+     }
+     args = [
+       "-i",
+@@ -368,9 +368,9 @@ if (!is_android && !is_mac) {
+ 
+   chrome_binary("chrome_initial") {
+     if (is_win) {
+-      output_name = "initialexe/chrome"
++      output_name = "initialexe/nsegbrowser"
+     } else {
+-      output_name = "chrome"
++      output_name = "nsegbrowser"
+     }
+ 
+     sources = []
+diff --git a/chrome/android/java/res_chromium/values/channel_constants.xml b/chrome/android/java/res_chromium/values/channel_constants.xml
+index b7b3bfc29641..d0f6c026f477 100644
+--- a/chrome/android/java/res_chromium/values/channel_constants.xml
++++ b/chrome/android/java/res_chromium/values/channel_constants.xml
+@@ -5,7 +5,7 @@
+ 
+ <resources xmlns:android="http://schemas.android.com/apk/res/android">
+     <!-- The application name displayed to the user. -->
+-    <string name="app_name" translatable="false">Chromium</string>
+-    <string name="bookmark_widget_title" translatable="false">Chromium bookmarks</string>
+-    <string name="search_widget_title" translatable="false">Chromium search</string>
++    <string name="app_name" translatable="false">Nseg Browser</string>
++    <string name="bookmark_widget_title" translatable="false">Nseg Browser bookmarks</string>
++    <string name="search_widget_title" translatable="false">Nseg Browser search</string>
+ </resources>
+diff --git a/chrome/app/chrome_exe.ver b/chrome/app/chrome_exe.ver
+index a2d39013f5a5..5d99311717ac 100644
+--- a/chrome/app/chrome_exe.ver
++++ b/chrome/app/chrome_exe.ver
+@@ -1,2 +1,2 @@
+ INTERNAL_NAME=chrome_exe
+-ORIGINAL_FILENAME=chrome.exe
++ORIGINAL_FILENAME=nsegbrowser.exe
+diff --git a/chrome/app/theme/chromium/BRANDING b/chrome/app/theme/chromium/BRANDING
+index 26918a105cd1..38a60eaa1bb3 100644
+--- a/chrome/app/theme/chromium/BRANDING
++++ b/chrome/app/theme/chromium/BRANDING
+@@ -1,10 +1,10 @@
+-COMPANY_FULLNAME=The Chromium Authors
+-COMPANY_SHORTNAME=The Chromium Authors
+-PRODUCT_FULLNAME=Chromium
+-PRODUCT_SHORTNAME=Chromium
+-PRODUCT_INSTALLER_FULLNAME=Chromium Installer
+-PRODUCT_INSTALLER_SHORTNAME=Chromium Installer
+-COPYRIGHT=Copyright 2019 The Chromium Authors. All rights reserved.
+-MAC_BUNDLE_ID=org.chromium.Chromium
++COMPANY_FULLNAME=NSEG
++COMPANY_SHORTNAME=NSEG
++PRODUCT_FULLNAME=Nseg Browser
++PRODUCT_SHORTNAME=Nseg Browser
++PRODUCT_INSTALLER_FULLNAME=Nseg Browser Installer
++PRODUCT_INSTALLER_SHORTNAME=Nseg Browser Installer
++COPYRIGHT=Copyright 2019 NSEG. All rights reserved.
++MAC_BUNDLE_ID=jp.nseg.nsegbrowser
+ MAC_CREATOR_CODE=Cr24
+ MAC_TEAM_ID=
+diff --git a/chrome/common/chrome_paths_linux.cc b/chrome/common/chrome_paths_linux.cc
+index 5659ef5d6f97..26340758295e 100644
+--- a/chrome/common/chrome_paths_linux.cc
++++ b/chrome/common/chrome_paths_linux.cc
+@@ -90,7 +90,7 @@ bool GetDefaultUserDataDirectory(base::FilePath* result) {
+ #if defined(GOOGLE_CHROME_BUILD)
+   *result = config_dir.Append("google-chrome" + GetChannelSuffixForDataDir());
+ #else
+-  *result = config_dir.Append("chromium");
++  *result = config_dir.Append("nsegbrowser");
+ #endif
+   return true;
+ }
+diff --git a/chrome/common/chrome_paths_mac.mm b/chrome/common/chrome_paths_mac.mm
+index 36d4f0677e15..ce506eea92fd 100644
+--- a/chrome/common/chrome_paths_mac.mm
++++ b/chrome/common/chrome_paths_mac.mm
+@@ -59,7 +59,7 @@ char* ProductDirNameForBundle(NSBundle* chrome_bundle) {
+ #if defined(GOOGLE_CHROME_BUILD)
+     product_dir_name = "Google/Chrome";
+ #else
+-    product_dir_name = "Chromium";
++    product_dir_name = "NsegBrowser";
+ #endif
+   }
+ 
+diff --git a/chrome/install_static/chromium_install_modes.cc b/chrome/install_static/chromium_install_modes.cc
+index ae706e780b6c..6c0335dfd77b 100644
+--- a/chrome/install_static/chromium_install_modes.cc
++++ b/chrome/install_static/chromium_install_modes.cc
+@@ -16,16 +16,16 @@ namespace install_static {
+ 
+ const wchar_t kCompanyPathName[] = L"";
+ 
+-const wchar_t kProductPathName[] = L"Chromium";
++const wchar_t kProductPathName[] = L"Nseg Browser";
+ 
+ const size_t kProductPathNameLength = _countof(kProductPathName) - 1;
+ 
+ // No integration with Google Update, so no app GUID.
+ const wchar_t kBinariesAppGuid[] = L"";
+ 
+-const wchar_t kBinariesPathName[] = L"Chromium Binaries";
++const wchar_t kBinariesPathName[] = L"Nseg Browser Binaries";
+ 
+-const char kSafeBrowsingName[] = "chromium";
++const char kSafeBrowsingName[] = "nsegbrowser";
+ 
+ const InstallConstants kInstallModes[] = {
+     // The primary (and only) install mode for Chromium.
+@@ -36,10 +36,10 @@ const InstallConstants kInstallModes[] = {
+         L"",             // Empty install_suffix for the primary install mode.
+         L"",             // No logo suffix for the primary install mode.
+         L"",          // Empty app_guid since no integraion with Google Update.
+-        L"Chromium",  // A distinct base_app_name.
+-        L"Chromium",  // A distinct base_app_id.
+-        L"ChromiumHTM",                             // ProgID prefix.
+-        L"Chromium HTML Document",                  // ProgID description.
++        L"NsegBrowser",  // A distinct base_app_name.
++        L"NsegBrowser",  // A distinct base_app_id.
++        L"NsegBrowserHTM",                             // ProgID prefix.
++        L"Nseg Browser HTML Document",                  // ProgID description.
+         L"{7D2B3E1D-D096-4594-9D8F-A6667F12E0AC}",  // Active Setup GUID.
+         L"{A2DF06F9-A21A-44A8-8A99-8B9C84F29160}",  // CommandExecuteImpl CLSID.
+         {0x635EFA6F,
+diff --git a/chrome/installer/mini_installer/BUILD.gn b/chrome/installer/mini_installer/BUILD.gn
+index 7a779fc3ce1a..c64175c28beb 100644
+--- a/chrome/installer/mini_installer/BUILD.gn
++++ b/chrome/installer/mini_installer/BUILD.gn
+@@ -132,7 +132,7 @@ template("generate_mini_installer") {
+ 
+     inputs = [
+       "$chrome_dll_file",
+-      "$root_out_dir/chrome.exe",
++      "$root_out_dir/nsegbrowser.exe",
+       "$root_out_dir/locales/en-US.pak",
+       "$root_out_dir/setup.exe",
+       "//chrome/tools/build/win/makecab.py",
+diff --git a/chrome/tools/build/win/FILES.cfg b/chrome/tools/build/win/FILES.cfg
+index be79fb4d6ae6..ed0238c3d093 100644
+--- a/chrome/tools/build/win/FILES.cfg
++++ b/chrome/tools/build/win/FILES.cfg
+@@ -43,7 +43,7 @@ FILES = [
+     'optional': ['official'],
+   },
+   {
+-    'filename': 'chrome.exe',
++    'filename': 'nsegbrowser.exe',
+     'buildtype': ['dev', 'official'],
+     'filegroup': ['default', 'symsrc'],
+   },
+diff --git a/chrome/tools/build/win/make_zip.bat b/chrome/tools/build/win/make_zip.bat
+index ba0328883b35..cc8bd011a70c 100755
+--- a/chrome/tools/build/win/make_zip.bat
++++ b/chrome/tools/build/win/make_zip.bat
+@@ -12,6 +12,6 @@ setlocal
+ set makezip=chrome\tools\build\make_zip.py
+ set outdir=%1
+ set cfg=chrome\tools\build\win\FILES.cfg
+-set archive=%outdir%\chrome-win32.zip
++set archive=%outdir%\nsegbrowser-win32.zip
+ 
+ python %makezip% %outdir% %cfg% %archive%
+diff --git a/tools/grit/grit/node/message.py b/tools/grit/grit/node/message.py
+index a21c38c4a45d..2e55b55fd4e0 100644
+--- a/tools/grit/grit/node/message.py
++++ b/tools/grit/grit/node/message.py
+@@ -265,6 +265,17 @@ class MessageNode(base.ContentNode):
+                                          self.PseudoIsAllowed(),
+                                          self.ShouldFallbackToEnglish()
+                                          ).GetRealContent()
++
++    _URL_PATTERN = lazy_re.compile(r'^[a-zA-Z0-9-]+:\/\/.*', re.I)
++    _GOOGLE_CHROME_PATTERN = lazy_re.compile(r'Google Chrom[a-zA-Z]+', re.I)
++    _CHROME_PATTERN = lazy_re.compile(r'Chrom[a-zA-Z]+', re.I)
++    _CHROME_PATTERN_HI = lazy_re.compile(u'\u0915\u094D\u0930\u094B\u092E', re.U)
++
++    if not _URL_PATTERN.match(msg):
++      msg = _GOOGLE_CHROME_PATTERN.sub('Nseg Browser', msg)
++      msg = _CHROME_PATTERN.sub('Nseg Browser', msg)
++      msg = _CHROME_PATTERN_HI.sub('Nseg Browser', msg)
++
+     if self._replace_ellipsis:
+       msg = _ELLIPSIS_PATTERN.sub(_ELLIPSIS_SYMBOL, msg)
+     return msg.replace('[GRITLANGCODE]', lang)
